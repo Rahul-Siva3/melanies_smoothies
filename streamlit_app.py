@@ -66,11 +66,17 @@ st.markdown("---")
 st.subheader("🍉 SmoothieFruit Nutrition Info")
 
 smoothiefruit_response = requests.get(
-    "http://my.smoothiefruit.com/api/fruit/watermelon"
+    "https://my.smoothiefruit.com/api/fruit/watermelon",
+    timeout=10
 )
 
-st.dataframe(
-    data=smoothiefruit_response.json(),
-    use_container_width=True
-)
-
+if smoothiefruit_response.status_code == 200:
+    smoothiefruit_data = smoothiefruit_response.json()
+    st.dataframe(
+        data=smoothiefruit_data,
+        use_container_width=True
+    )
+else:
+    st.error(
+        f"API call failed with status code {smoothiefruit_response.status_code}"
+    )
