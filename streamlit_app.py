@@ -43,10 +43,10 @@ if submit_order and ingredients_list and name_on_order:
         icon="✅"
     )
 
-# New section to display smoothiefruit nutrition information
-smoothiefruit_response = requests.get(
-    "https://my.smoothiefruit.com/api/fruit/watermelon"
-)
-
-st.text(smoothiefruit_response)
+    # New section to display smoothiefruit nutrition information
+    smoothiefruit_response = requests.get(
+        "https://my.smoothiefruit.com/api/fruit/watermelon"
+    )
+    
+    st.text(smoothiefruit_response)
 
