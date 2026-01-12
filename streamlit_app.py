@@ -66,12 +66,11 @@ st.markdown("---")
 st.subheader("🍉 SmoothieFruit Nutrition Info")
 
 smoothiefruit_response = requests.get(
-    "https://my.smoothiefruit.com/api/fruit/watermelon",
-    verify = False
+    "http://my.smoothiefruit.com/api/fruit/watermelon"
 )
 
-# Convert JSON response into a Streamlit dataframe
 st.dataframe(
     data=smoothiefruit_response.json(),
     use_container_width=True
 )
+
