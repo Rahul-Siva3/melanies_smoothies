@@ -1,7 +1,9 @@
+#CH.SC.U4AIE23056
+
 import streamlit as st
 from snowflake.snowpark.functions import col
-import requests
 import pandas as pd
+import requests
 
 # -------------------------------
 # App Title & Description
@@ -16,13 +18,13 @@ name_on_order = st.text_input("Name on Smoothie:")
 st.write("The name on your Smoothie will be:", name_on_order)
 
 # -------------------------------
-# Snowflake connection (SniS)
+# Snowflake connection (SniS style)
 # -------------------------------
 cnx = st.connection("snowflake")
 session = cnx.session()
 
 # -------------------------------
-# Fruit options (FRUIT_NAME + SEARCH_ON)
+# Fruit options (GUI label + search term)
 # -------------------------------
 my_dataframe = (
     session
@@ -30,9 +32,12 @@ my_dataframe = (
     .select(col("FRUIT_NAME"), col("SEARCH_ON"))
 )
 
-# Convert to Pandas for .loc usage
+# Convert Snowpark DF → Pandas DF
 pd_df = my_dataframe.to_pandas()
 
+# -------------------------------
+# Multiselect (shows FRUIT_NAME)
+# -------------------------------
 ingredients_list = st.multiselect(
     "Choose up to 5 ingredients:",
     pd_df["FRUIT_NAME"].tolist(),
@@ -51,34 +56,33 @@ if submit_order and ingredients_list and name_on_order:
     for fruit_chosen in ingredients_list:
         ingredients_string += fruit_chosen + " "
 
-        # Get SEARCH_ON value using Pandas
-        search_on = pd_df.loc[
-            pd_df["FRUIT_NAME"] == fruit_chosen,
-            "SEARCH_ON"
-        ].iloc[0]
-
-        st.write(
-            "The search value for",
-            fruit_chosen,
-            "is",
-            search_on
+        # 🔑 Get SEARCH_ON value for API lookup
+        search_on = (
+            pd_df.loc[
+                pd_df["FRUIT_NAME"] == fruit_chosen,
+                "SEARCH_ON"
+            ].iloc[0]
         )
 
+        st.write("The search value for", fruit_chosen, "is", search_on)
+
+        # -------------------------------
         # SmoothieFroot API call
-        response = requests.get(
+        # -------------------------------
+        st.subheader(fruit_chosen + " Nutrition Information")
+
+        smoothiefruit_response = requests.get(
             f"https://my.smoothiefroot.com/api/fruit/{search_on}"
         )
 
-        if response.status_code == 200:
-            st.subheader(f"{fruit_chosen} Nutrition Information")
-            st.dataframe(
-                response.json(),
-                use_container_width=True
-            )
-        else:
-            st.warning(f"No nutrition data found for {fruit_chosen}")
+        st.dataframe(
+            smoothiefruit_response.json(),
+            use_container_width=True
+        )
 
+    # -------------------------------
     # Insert order into Snowflake
+    # -------------------------------
     my_insert_stmt = (
         "insert into smoothies.public.orders (ingredients, name_on_order) "
         "values ('" + ingredients_string + "', '" + name_on_order + "')"
